@@ -3,7 +3,7 @@
 #- Querying the cloud database requires creating your own AACT user account - insert your username and password in code below
 #- Here we take only the 2021 snapshot of the tables necessary for updating the COVID-19 study and sex/gender candidates counts
 #- Will query for all studies submitted to ClinicalTrials.gov on/after Jan 1, 2021
-#- The latest submission date in our exsiting sample was Jan 15, 2021, we allow for a couple of weeks overlap to catch any studies whose quality control review (which takes place before a submitted study is posted on CT.gov) was taking longer than average. You can extend this if you wish by changing the date 
+#- The latest submission date in our existing sample was Jan 15, 2021, we allow for a couple of weeks overlap to catch any studies whose quality control review (which takes place before a submitted study is posted on CT.gov) was taking longer than average. You can extend this if you wish by changing the date 
 #- Note that to create our full dataset we queried for all studies with start date on/after Jan 1 2020 or (since not all have a start date) with a study first submitted date on/after Jan 1, 2020
 
 install.packages("RPostgreSQL",repos='https://mirrors.dotsrc.org/cran/') 
