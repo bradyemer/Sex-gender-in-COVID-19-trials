@@ -1,0 +1,48 @@
+This pipeline (in two parts: R script and Python script) updates the numbers in the "Lack of Consideration of Sex and Gender in Clinical Trials for COVID-19, Brady et. al, 2021" manuscript. Those counts were based on a Jan 26th 2021 query of the AACT database of ClinicalTrials.gov data. Selection of COVID-19 studies was fully automated, but sorting of studies into sex categories (analysis, sex matching/recording sex, sex based recruitment etc.) involved manual coding of studies, thus this code provides a count of new COVID-19 studies posted to ClinicalTrials.gov since our last update and counts of CANDIDATES for sex/gender analysis etc.
+
+Steps you need to take to get this running:
+- 1) Create a (free) AACT user account to access the cloud database
+- 2) Edit the R script 'part1.r' (add your username and password, change data paths) and run to download the necessary data
+- 3) Run the Python script 'part2.py' (change paths to downloaded AACT data and source data if necessary) to get the updated COVID-19 study counts and sex/gender analysis candidate numbers 
+
+
+Explanation of pipeline:
+
+- Uses the AACT PostgreSQL database https://aact.ctti-clinicaltrials.org/
+- "AACT is the database for Aggregate Analysis of ClinicalTrials.gov. This version of AACT is a PostgreSQL relational database containing information about clinical studies that have been been registered at ClinicalTrials.gov. AACT includes all of the protocol and results data elements for studies that are publicly available at ClinicalTrials.gov. Content is downloaded daily from ClinicalTrials.gov and loaded into AACT."
+- On https://aact.ctti-clinicaltrials.org/ a full static copy of the AACT database in PostgreSQL format can be downloaded (or as pipe-delimited flat files). PostgreSQL installation issues (including with related python packages) and our lack of need to download all ClinicalTrials.gov data predating 2020 led to us to simply query the cloud based version AACT in R to get the Jan 1 2020 - onwards snapshot of the tables of interest for our study (a full copy was downloaded in the early stages to verify our selection process). Accessing the cloud version requires signing up for a (free) AACT account.
+- Last AACT query was on Jan 26 2021, the latest submission date at that time to CT.gov was Jan 15, 2021.
+- We wll not redownload all 2020 data, this is pipeline is simply a rough update from mid-January on of the newly-submitted COVID-19 study numbers and sex/gender analysis candidates. It does not attempt to account for editing of records of studies already in our existing dataset - though this can be easliy done by adding a broader date range to the AACT query used to generate the data input here
+- We have set up R query of AACT to download studies submitted on/after Jan 1 2021, allowing for overlap in case there were any delays between submitting to and being posted on ClinicalTrials.gov (there is a quality control process that takes place between submission and posting that for our currrent sample of 4420 studies took on average 7 days (75th percentile is 7 days also)). You can expand this overlap if you deem it necessary
+
+
+Python code to update the COVID and sex/gender candidate counts
+
+The search terms used to select our COVID-19 set are: Coronavirus, Corona Virus, SARS-CoV-2, SARS CoV2, SARSCoV2, COVID (unbounded string search, to catch COVID-19, COVID19 etc.), 2019 nCoV, 2019nCoV
+- Search will be case insensitive, hyphens will be removed from text (and it will be single-spaced) and search terms prior to searching. 
+- Any study with one or more of the search terms in one or more of the targeted fields will be counted as a positive match
+- The official and brief titles and conditions, followed by primary, secondary and other outcomes, brief summaries and detailed descriptions will be searched for the terms.
+
+Merging the results of the searches of the most relevant registry fields:
+- Will accept anything with a match in the titles or conditions (main ones being studied) without question - trust that COVID-19 should be main focus of study in such a case (98% of our 2020 sample had such a match)
+- Primary outcomes matches will be added too
+- Otherwise must have match in SO or OO AND brief summary (since all have it) or in brief summary AND detailed description (to avoid adding studies with simple statement in one of the summaries about changed protocol or pausing due to covid and to avoid studies simply administering a PCR test as a precaution and reporting positivity rates). 
+- We will lose a small number of true positive studies e.g ones with no detailed description and little info in outcomes, but that do discuss the COVID-related nature of the project in the brief summmary, but this is only way to ensure that a large number of false positives are not admitted into our set.
+
+Steps to clean the COVID-19 dataset:
+- Date selection - remove anything that started pre-2020
+- Withdrawn and No Longer Available studies should be removed
+- Obvious duplicates (note AACT cleaned up on monthly basis, so some studies in our existing set may be removed by them now)
+- False positives will exist in the dataset, but at a small level as vast majority have COVID matches in the titles and/or conditions.
+
+
+Selecting the sex/gender candidates:
+- In the paper, the candidates are selected via an automated text search of the most relevant fields, and then most of the sorting into the sex categories was based on a manual coding of the full records on ClinicalTrials.gov
+- Here we simply reproduce the automated selecting of the sex/gender candidates, these numbers will be an OVERCOUNT as they will include those with non-relevant sex/gender mentions.
+- Studies designed as single sex and those where all sexes are eligible are identified using the 'Sex' (eligible for study) data element from CT.gov. It can be 'All', 'Male' or 'Female'. Only 'All' sex studies have their registrations searched for sex/gender terms.
+- We search only the most relevant fields to detect attention to sex and gender in recruitment, results reporting and analysis (so e.g avoid looking at the exclusion criteria)
+- These are: detailed description (where protocol etc. should be outlined, roughly 70% of studies include one), brief summary (description intended for lay public, nearly all have one), brief and official titles, outcome measures (to detect if there are sex-based outcomes), design groups (descriptions of study groups often includes info on whether they are sex-matched to controls etc.), eligibilities (inclusion criteria, population and gender-based fields) and interventions descriptions (e.g often saw a questionnaire to record patient gender etc. listed as an intervention)
+- Search terms are: 'sex','gender', 'sexes', 'genders','women', 'woman', 'female', 'females','men', 'male','males, 'man', 'girl', 'boy', 'girls', 'boys', 'pregnan*' and 'transg*'
+- Perform a case insensitive regex search with boundary characters for terms (match only whole words) to avoid matching to e.g 'mental', 'sexual' etc. Except in case of 'pregnan*' and 'transg*'
+- A study is included in the sex/gender candidates set if it matches to one (or more) of our search terms in one or more of the targeted fields
+- In the existing (coded) sample for the paper manual coding has been performed on all those matched studies, in the updated numbers provided here there will be some noise.
