@@ -1,0 +1,4 @@
+This excel file contains the paper data in two sheets:
+ct.gov_sample sheet: The list of the 4420 ClinicalTrials.gov COVID-19 studies in our final sample, the sex category labels and new study type labels we created
+                     plus all the other necessary data from ClinicalTrials.gov to recreate the Table 1 and supplementary figures. 
+pubmed_sample sheet: The list of COVID-19 RCTs identified on Pubmed and the results of the sex/gender attention coding (per paper section)
