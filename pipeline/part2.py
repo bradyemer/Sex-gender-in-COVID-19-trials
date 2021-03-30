@@ -59,7 +59,7 @@ studies['detailed_description']=studies['detailed_description'].str.replace('-',
 def mask_builder(df_name,col_name,search_terms):
     # Boolean mask; 
     # when applied to df, should return all rows with one or more of search terms in targeted column.
-    # case-insensitive basic-substring search
+    # case-insensitive search, default assumption is that search term input is a regular expression
     
     #impose that datafields are not null (else applying mask1 could break)
     mask0=df_name[col_name].notnull()
@@ -67,8 +67,8 @@ def mask_builder(df_name,col_name,search_terms):
     mask1=pd.Series(False,index=df_name.index)
     for i in search_terms:
         mask1=mask1+df_name[col_name].str.contains(search_terms[i],case=False,regex=True)
-        #impose mask0 AND mask1 i.e discard rows with null values in col_name
-        mask=mask0&mask1         
+    #impose mask0 AND mask1 i.e discard rows with null values in col_name
+    mask=mask0&mask1         
     return mask
 
 
@@ -94,8 +94,6 @@ corona_terms={1:'coronavirus',2:'corona virus',3:'sars cov 2',4:'sars cov2',5:'s
 ## simple case insensitive substring search (so e.g will catch betacoronavirus, COVID19 etc.)
 # field has to contain one or more of search terms to be counted as a match
 # e.g here title must contain 'coronavirus' OR 'corona virus' OR........
-
-
 
 corona_official_title=studies[mask_builder(studies,'official_title',corona_terms)]
 
@@ -293,8 +291,9 @@ new_corona_M=new_corona[new_corona['gender']=='Male']
 ###################################################################################################################################################
 
 # DEFINE DICTIONARY WITH SEX TERMS
-# tailor the terms for input into search - since now we want regular expressions - search for whole words, add the \b bounding conditions
+# tailor the terms for input into search - since now we want regular expressions - search for whole words, but add the \b bounding conditions
 # \b ensure that bounding characters of words cannot be alpha numeric characters
+# to avoid matching to things like e.g 'mental', 'sexual', but make sure catch things like 'men/women' and 'sex/gender'
 
 sex_terms={1:r'\bsex\b',2:r'\bsexes\b',3:r'\bgender\b',4:r'\bgenders\b',5:r'\bwoman\b',6:r'\bwomen\b',7:r'\bman\b',8:r'\bmen\b',9:r'\bfemale\b',10:r'\bfemales\b',11:r'\bmale\b',12:r'\bmales\b',13:r'\bgirl\b',14:r'\bgirls\b',15:r'\bboy\b',16:r'\bboys\b',17:'pregnan',18:'transg'}
 
